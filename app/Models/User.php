@@ -24,7 +24,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'api_token'
+        'api_token',
+        'phone',
+        'street_address',
+        'city',
+        'postal_code'
     ];
 
     /**
@@ -62,5 +66,20 @@ class User extends Authenticatable
     public function tokens()
     {
         return $this->morphMany(SanctumPersonalAccessToken::class, 'tokenable');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class);
     }
 }

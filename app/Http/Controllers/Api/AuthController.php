@@ -135,7 +135,24 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $user = $request->user();
+            $token = str_replace('Bearer ', '', $request->header('Authorization'));
+            
+            if (!$token) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No token provided'
+                ], 401);
+            }
+
+            $user = User::where('api_token', hash('sha256', $token))->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid token'
+                ], 401);
+            }
+
             $user->api_token = null;
             $user->save();
 
@@ -146,8 +163,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString() // Add this for debugging
+                'message' => 'Failed to logout: ' . $e->getMessage()
             ], 500);
         }
     }

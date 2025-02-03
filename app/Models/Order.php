@@ -15,11 +15,13 @@ class Order extends Model
         'total_amount',
         'first_name',
         'last_name',
+        'shipping_address',
         'street_address',
         'city',
         'postal_code',
         'phone_number',
         'payment_method',
+        'status',
         'created_at',
         'updated_at'
     ];
@@ -27,6 +29,10 @@ class Order extends Model
     protected $dates = [
         'created_at',
         'updated_at'
+    ];
+
+    protected $attributes = [
+        'status' => 'pending'
     ];
 
     public function items()

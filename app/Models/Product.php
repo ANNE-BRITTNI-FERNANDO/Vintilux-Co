@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-// use Illuminate\Database\Eloquent\Model;
 use MongoDB\Laravel\Eloquent\Model;
+use App\Models\Cart;
+use App\Models\Wishlist;
 
 class Product extends Model
 {
     protected $connection = 'mongodb';
     protected $collection = 'products';
+    
     protected $fillable = [
         'product_name',
         'product_description',
@@ -25,5 +27,17 @@ class Product extends Model
     protected $casts = [
         'product_colors' => 'array',
         'product_gallery' => 'array',
+        'product_price' => 'float',
+        'product_quantity' => 'integer',
     ];
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'product_id', '_id');
+    }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class, 'product_id', '_id');
+    }
 }

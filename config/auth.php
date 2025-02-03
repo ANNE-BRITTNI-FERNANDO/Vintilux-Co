@@ -48,6 +48,8 @@ return [
             'driver' => 'token',
             'provider' => 'users',
             'hash' => true,
+            'input_key' => 'api_token',
+            'storage_key' => 'api_token'
         ],
         'sanctum' => [
             'driver' => 'sanctum',

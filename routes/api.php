@@ -41,11 +41,12 @@ Route::middleware('auth:api')->group(function () {
 
     // Cart routes
     Route::prefix('cart')->group(function () {
-        Route::get('/', [CartController::class, 'index']);
-        Route::post('/', [CartController::class, 'store']);
-        Route::put('/{id}', [CartController::class, 'update']);
-        Route::delete('/{id}', [CartController::class, 'destroy']);
-        Route::delete('/', [CartController::class, 'clear']);
+        Route::get('/', [CartController::class, 'index']);  // View cart items
+        Route::post('/', [CartController::class, 'store']);  // Add product to cart
+        Route::put('/{id}', [CartController::class, 'update']);  // Update cart item
+        Route::delete('/{id}', [CartController::class, 'destroy']);  // Remove item from cart
+        Route::delete('/', [CartController::class, 'clear']);  // Clear cart
+        Route::post('/buy-now', [CartController::class, 'buyNow']); // Add product for checkout (buy now)
     });
 
     // Wishlist routes

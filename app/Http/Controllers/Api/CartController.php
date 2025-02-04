@@ -28,18 +28,12 @@ class CartController extends Controller
                 ], 401);
             }
 
-            // Debug user ID
-            \Log::info('User ID: ' . $user->_id);
-
+            // Fetch the cart items for the authenticated user
             $cart = Cart::where('user_id', $user->_id)
                 ->with(['product' => function($query) {
                     $query->select(['_id', 'product_name', 'product_price', 'product_image']);
                 }])
                 ->get();
-
-            // Debug cart items
-            \Log::info('Cart items count: ' . $cart->count());
-            \Log::info('Cart items: ' . json_encode($cart));
 
             return response()->json([
                 'status' => 'success',
@@ -47,8 +41,6 @@ class CartController extends Controller
             ]);
         } catch (\Exception $e) {
             \Log::error('Cart error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -68,7 +60,7 @@ class CartController extends Controller
             }
 
             $request->validate([
-                'product_id' => 'required',
+                'product_id' => 'required|exists:products,_id', // Ensure product exists
                 'quantity' => 'required|integer|min:1'
             ]);
 
@@ -80,28 +72,26 @@ class CartController extends Controller
                 ], 404);
             }
 
-            // Debug product
-            \Log::info('Product found: ' . json_encode($product));
-
             $existingCart = Cart::where('user_id', $user->_id)
                 ->where('product_id', $request->product_id)
                 ->first();
 
             if ($existingCart) {
+                // Update existing cart item if the product is already in the cart
                 $existingCart->quantity = $request->quantity;
                 $existingCart->save();
                 $cart = $existingCart;
-                \Log::info('Updated existing cart item: ' . json_encode($cart));
             } else {
+                // Create a new cart item if it doesn't exist
                 $cart = Cart::create([
                     'user_id' => $user->_id,
                     'product_id' => $request->product_id,
                     'quantity' => $request->quantity,
                     'price' => $product->product_price
                 ]);
-                \Log::info('Created new cart item: ' . json_encode($cart));
             }
 
+            // Reload product data into the cart response
             $cart->load('product');
 
             return response()->json([
@@ -111,8 +101,6 @@ class CartController extends Controller
             ], 201);
         } catch (\Exception $e) {
             \Log::error('Cart store error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -233,7 +221,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        // Add to cart
+        // Add product directly to cart for checkout (buy now)
         $user = $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json([

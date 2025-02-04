@@ -49,11 +49,14 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // Wishlist routes
-    Route::prefix('wishlist')->group(function () {
-        Route::get('/', [WishlistController::class, 'index']);
-        Route::post('/toggle', [WishlistController::class, 'toggle']);
-        Route::get('/check/{productId}', [WishlistController::class, 'check']);
-    });
+// Fetch Wishlist for authenticated user
+Route::get('/wishlist', [WishlistController::class, 'index']);
+
+// Add or Remove product from wishlist (Toggle)
+Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
+
+// Check if product is in wishlist
+Route::get('/wishlist/check/{productId}', [WishlistController::class, 'check']);
 
     // Order routes
     Route::prefix('orders')->group(function () {

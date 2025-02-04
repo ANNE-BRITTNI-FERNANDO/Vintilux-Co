@@ -11,12 +11,24 @@ use MongoDB\BSON\ObjectId;
 
 class WishlistController extends Controller
 {
+    /**
+     * Get authenticated user from the token.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \App\Models\User|null
+     */
     protected function getAuthenticatedUser(Request $request)
     {
         $token = str_replace('Bearer ', '', $request->header('Authorization'));
         return User::where('api_token', hash('sha256', $token))->first();
     }
 
+    /**
+     * Get the wishlist of an authenticated user.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function index(Request $request)
     {
         try {
@@ -28,7 +40,8 @@ class WishlistController extends Controller
                 ], 401);
             }
 
-            $wishlist = Wishlist::where('user_id', $user->_id)
+            // Fetching the wishlist items using the authenticated user and using proper ObjectId comparison
+            $wishlist = Wishlist::where('user_id', new ObjectId($user->_id))
                 ->with(['product' => function($query) {
                     $query->select(['_id', 'product_name', 'product_price', 'product_image']);
                 }])
@@ -47,6 +60,12 @@ class WishlistController extends Controller
         }
     }
 
+    /**
+     * Toggle product in the user's wishlist.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function toggle(Request $request)
     {
         try {
@@ -58,6 +77,7 @@ class WishlistController extends Controller
                 ], 401);
             }
 
+            // Validate product_id in the request
             $request->validate([
                 'product_id' => 'required'
             ]);
@@ -70,18 +90,21 @@ class WishlistController extends Controller
                 ], 404);
             }
 
-            $existingWishlist = Wishlist::where('user_id', $user->_id)
-                ->where('product_id', $request->product_id)
+            // Check if the product already exists in the wishlist
+            $existingWishlist = Wishlist::where('user_id', new ObjectId($user->_id))
+                ->where('product_id', new ObjectId($request->product_id))
                 ->first();
 
             if ($existingWishlist) {
+                // Remove product from the wishlist
                 $existingWishlist->delete();
                 $message = 'Product removed from wishlist';
                 $isInWishlist = false;
             } else {
+                // Add product to the wishlist
                 Wishlist::create([
-                    'user_id' => $user->_id,
-                    'product_id' => $request->product_id
+                    'user_id' => new ObjectId($user->_id),
+                    'product_id' => new ObjectId($request->product_id)
                 ]);
                 $message = 'Product added to wishlist';
                 $isInWishlist = true;
@@ -101,6 +124,13 @@ class WishlistController extends Controller
         }
     }
 
+    /**
+     * Check if a product is in the user's wishlist.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $productId
+     * @return \Illuminate\Http\Response
+     */
     public function check(Request $request, $productId)
     {
         try {
@@ -112,8 +142,9 @@ class WishlistController extends Controller
                 ], 401);
             }
 
-            $exists = Wishlist::where('user_id', $user->_id)
-                ->where('product_id', $productId)
+            // Check if the product is already in the user's wishlist
+            $exists = Wishlist::where('user_id', new ObjectId($user->_id))
+                ->where('product_id', new ObjectId($productId))
                 ->exists();
 
             return response()->json([
